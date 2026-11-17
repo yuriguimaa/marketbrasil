@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MarketBrasil · Mercado Financeiro</title>
+    <meta name="description" content="Cotações, gráficos e indicadores do mercado brasileiro (B3), americano e de criptomoedas, com rankings, watchlist, carteira e notícias." />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#0B0E13" />
+    <meta name="color-scheme" content="dark" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+
+    <!-- Compartilhamento social (título/descrição atualizados por página) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="MarketBrasil" />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:title" content="MarketBrasil · Mercado Financeiro" />
+    <meta property="og:description" content="Cotações, gráficos e indicadores do mercado brasileiro, americano e de criptomoedas." />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="MarketBrasil · Mercado Financeiro" />
+    <meta name="twitter:description" content="Cotações, gráficos e indicadores do mercado brasileiro, americano e de criptomoedas." />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "MarketBrasil",
+        "applicationCategory": "FinanceApplication",
+        "operatingSystem": "Web",
+        "inLanguage": "pt-BR",
+        "description": "Plataforma para acompanhar ações, índices, ETFs, FIIs, criptomoedas e notícias dos mercados brasileiro e americano.",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "BRL" }
+      }
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+      /* Evita flash branco antes do CSS carregar */
+      html, body { background: #0b0e13; color: #e7eaf0; margin: 0; }
+    </style>
+  </head>
+  <body>
+    <noscript>
+      <p style="font-family: system-ui, sans-serif; padding: 24px;">O MarketBrasil precisa de JavaScript habilitado para exibir cotações e gráficos.</p>
+    </noscript>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

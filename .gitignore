@@ -1,0 +1,11 @@
+node_modules/
+frontend/dist/
+backend/.env
+
+.vercel
+.env*
+
+# local / ferramentas
+.claude/
+*.log
+!backend/.env.example
