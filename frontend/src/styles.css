@@ -521,3 +521,34 @@ main:focus { outline: none; }
 .range-bar i { position: absolute; top: -3px; width: 2px; height: 10px; margin-left: -1px; background: var(--text); border-radius: 1px; transition: left .6s var(--ease-out); }
 @media (max-width: 1100px) { .mover-row .range-cell { display: none; } }
 @media (max-width: 760px) { .movers-grid { grid-template-columns: 1fr; } .movers-col + .movers-col { border-left: 0; border-top: 1px solid var(--border-soft); } }
+
+/* ---------- Conta e login ---------- */
+.account { display: inline-flex; align-items: center; gap: 6px; }
+.account-chip { display: inline-flex; align-items: center; gap: 7px; color: var(--text); font-weight: 500; text-decoration: none; max-width: 160px; }
+.account-chip span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.account-chip .avatar { width: 24px; height: 24px; flex: none; border-radius: 50%; display: grid; place-items: center; background: var(--accent-bg); color: var(--accent); font-size: 12px; font-weight: 700; border: 1px solid rgba(76, 141, 255, .35); }
+.account-btn { text-decoration: none; }
+.auth-wrap { display: grid; place-items: start center; padding: 40px 0 24px; }
+.auth-card { width: 100%; max-width: 380px; display: grid; gap: 14px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 24px; }
+.auth-card h1 { margin: 0; font-size: 20px; }
+.auth-card p { margin: 0; font-size: 12.5px; line-height: 1.5; }
+.auth-card .seg { justify-self: start; }
+.auth-links { display: flex; justify-content: space-between; font-size: 12px; }
+.link-btn { background: none; border: 0; padding: 0; color: var(--accent); font: inherit; cursor: pointer; }
+.link-btn:hover, .auth-links a:hover { text-decoration: underline; }
+.form-ok { font-size: 12.5px; color: #b8f0d2; background: var(--up-bg); border: 1px solid rgba(31, 191, 117, .35); border-radius: 6px; padding: 8px 10px; line-height: 1.45; }
+.move-banner { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 12px; padding: 10px 12px; font-size: 12.5px; background: var(--accent-bg); border: 1px solid rgba(76, 141, 255, .35); border-radius: var(--radius); }
+.move-banner span { flex: 1 1 260px; }
+
+/* ---------- Importação da B3 ---------- */
+.modal:has(.b3-steps), .modal:has(.table-wrap) { max-width: 600px; }
+.b3-steps { display: grid; gap: 10px; font-size: 12.5px; line-height: 1.5; }
+.b3-steps p { margin: 0; }
+.b3-steps ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; color: var(--text-2); }
+.dropzone { position: relative; display: grid; place-items: center; min-height: 96px; border: 1px dashed var(--border); border-radius: var(--radius); background: var(--panel-2); color: var(--text); font-weight: 500; cursor: pointer; transition: border-color .15s, background .15s; }
+.dropzone:hover, .dropzone:focus-within { border-color: var(--accent); background: var(--accent-bg); }
+.dropzone.busy { cursor: progress; opacity: .7; }
+.dropzone input { position: absolute; inset: 0; opacity: 0; cursor: inherit; }
+.b3-skipped { font-size: 12px; color: var(--text-2); }
+.b3-skipped summary { cursor: pointer; }
+.b3-skipped ul { margin: 6px 0 0; padding-left: 18px; max-height: 120px; overflow-y: auto; }

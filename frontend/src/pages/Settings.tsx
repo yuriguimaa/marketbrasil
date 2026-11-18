@@ -1,12 +1,14 @@
 import { usePageMeta } from '../lib/pageMeta';
 import { Panel, Seg } from '../components/ui';
-import { portfolioRepo, settingsRepo, useRepo, watchlistRepo } from '../services/storage';
+import { settingsRepo, useRepo, watchlistRepo } from '../services/storage';
+import { portfolioRepo, usePortfolioStatus } from '../services/portfolio';
 import { refreshNow, useMarket } from '../services/marketData';
 import { timeHM } from '../lib/format';
 
 export default function Settings() {
   usePageMeta('Configurações', undefined, { noindex: true });
   const [s, set] = useRepo(settingsRepo);
+  const pf = usePortfolioStatus();
   const backend = useMarket((x) => x.backend);
   const providers = useMarket((x) => x.providers);
   const last = useMarket((x) => x.lastUpdate);
@@ -67,10 +69,14 @@ export default function Settings() {
 
         <Panel title="Seus dados">
           <div style={{ display: 'grid', gap: 12 }}>
-            <span className="muted" style={{ fontSize: 12.5 }}>Watchlists, carteira e preferências ficam armazenadas apenas neste navegador. Não é necessário criar conta.</span>
+            <span className="muted" style={{ fontSize: 12.5 }}>
+              {pf.mode === 'cloud'
+                ? <>Sua carteira está salva na sua conta ({pf.email}). Watchlists e preferências ficam neste navegador.</>
+                : <>Watchlists, carteira e preferências ficam armazenadas apenas neste navegador. Não é necessário criar conta; se quiser acessar a carteira em outro dispositivo, <a href="/entrar">entre na sua conta</a>.</>}
+            </span>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               <button className="btn" onClick={exportData}>Exportar dados (JSON)</button>
-              <button className="btn danger" onClick={() => { if (confirm('Apagar todas as operações da carteira? Esta ação não pode ser desfeita.')) portfolioRepo.set([]); }}>Limpar carteira</button>
+              <button className="btn danger" onClick={() => { if (confirm(pf.mode === 'cloud' ? 'Apagar todas as operações da carteira da sua conta? Esta ação não pode ser desfeita.' : 'Apagar todas as operações da carteira? Esta ação não pode ser desfeita.')) portfolioRepo.set([]); }}>Limpar carteira</button>
               <button className="btn danger" onClick={() => { if (confirm('Apagar todas as watchlists?')) watchlistRepo.set([]); }}>Limpar watchlists</button>
             </div>
           </div>

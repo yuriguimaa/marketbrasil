@@ -6,6 +6,8 @@ import { Layout } from './components/Layout';
 import { startMarketData } from './services/marketData';
 import { startSpotlight } from './lib/spotlight';
 import { settingsRepo, useRepo } from './services/storage';
+import { startAuth } from './services/auth';
+import './services/portfolio';
 import Dashboard from './pages/Dashboard';
 
 /**
@@ -38,6 +40,7 @@ const Portfolio = lazy(() => import('./pages/Portfolio'));
 const News = lazy(() => import('./pages/News'));
 const Settings = lazy(() => import('./pages/Settings'));
 const About = lazy(() => import('./pages/About'));
+const Login = lazy(() => import('./pages/Login'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 const page = (el: React.ReactNode) => <Suspense fallback={<div className="page-loading" role="status" aria-label="Carregando página" />}>{el}</Suspense>;
@@ -63,11 +66,14 @@ function App() {
         <Route path="/noticias" element={page(<News />)} />
         <Route path="/configuracoes" element={page(<Settings />)} />
         <Route path="/sobre" element={page(<About />)} />
+        <Route path="/entrar" element={page(<Login />)} />
         <Route path="*" element={page(<NotFound />)} />
       </Route>
     </Routes>
   );
 }
+
+startAuth();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

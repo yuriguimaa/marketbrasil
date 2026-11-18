@@ -11,3 +11,4 @@ backend/.env
 !backend/.env.example
 backend/dist/
 *.tsbuildinfo
+!frontend/.env.example

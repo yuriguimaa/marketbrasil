@@ -6,7 +6,10 @@ import { AssetPicker } from '../components/AssetPicker';
 import { Change, DemoNotice, Logo, MarketTag, Modal, Panel, Seg, UpdatedAt } from '../components/ui';
 import { Icon } from '../components/Icon';
 import { useMarket } from '../services/marketData';
-import { portfolioRepo, uid, useRepo, type Transaction } from '../services/storage';
+import { localPortfolioRepo, uid, useRepo, type Transaction } from '../services/storage';
+import { moveLocalToAccount, portfolioRepo, usePortfolioStatus } from '../services/portfolio';
+import { authEnabled } from '../services/auth';
+import { B3Import } from '../components/B3Import';
 import { dirClass, money, num, pct, price } from '../lib/format';
 import type { Asset } from '../types';
 
@@ -62,6 +65,13 @@ export default function Portfolio() {
   const [filter, setFilter] = useState<'ALL' | 'BR' | 'US' | 'CRYPTO'>('ALL');
   const [form, setForm] = useState<null | { a?: Asset; side: 'buy' | 'sell'; qty: string; price: string; date: string; fees: string; error?: string }>(null);
   const usd = quotes.USDBRL?.price ?? 5.4;
+  const pf = usePortfolioStatus();
+  const [localTxs] = useRepo(localPortfolioRepo);
+  const [importing, setImporting] = useState(false);
+  const [notice, setNotice] = useState<string>();
+  const [moving, setMoving] = useState(false);
+  const [hideMove, setHideMove] = useState(() => { try { return sessionStorage.getItem('mb:hide-move') === '1'; } catch { return false; } });
+  const showMove = pf.mode === 'cloud' && !pf.loading && localTxs.length > 0 && !hideMove;
 
   const positions = useMemo(() => {
     const m = new Map<string, { qty: number; cost: number; realized: number }>();
@@ -139,13 +149,33 @@ export default function Portfolio() {
       <div className="page-head">
         <div>
           <h1>Minha Carteira</h1>
-          <div className="sub">Valores consolidados em BRL (USD/BRL {num(usd, 4)}) · salvo neste navegador · <UpdatedAt /></div>
+          <div className="sub">
+            Valores consolidados em BRL (USD/BRL {num(usd, 4)}) · {pf.mode === 'cloud'
+              ? <>salvo na sua conta{pf.saving ? ' (salvando…)' : ''}</>
+              : <>salvo neste navegador{authEnabled && <> · <Link to="/entrar">entre para guardar na sua conta</Link></>}</>} · <UpdatedAt />
+          </div>
         </div>
         <div className="actions">
-          <button className="btn primary" onClick={() => openForm()}><Icon name="plus" size={14} />Registrar operação</button>
+          <button className="btn" onClick={() => setImporting(true)} disabled={pf.loading}>Importar da B3</button>
+          <button className="btn primary" onClick={() => openForm()} disabled={pf.loading}><Icon name="plus" size={14} />Registrar operação</button>
         </div>
       </div>
       <DemoNotice />
+      {pf.error && <div className="form-error" role="alert" style={{ marginBottom: 12 }}>{pf.error}</div>}
+      {notice && <div className="form-ok" role="status" style={{ marginBottom: 12 }}>{notice}</div>}
+      {showMove && (
+        <div className="move-banner" role="region" aria-label="Carteira deste navegador">
+          <span>Há {localTxs.length} {localTxs.length === 1 ? 'operação salva' : 'operações salvas'} neste navegador, de antes do login. Quer levá-las para sua conta?</span>
+          <button className="btn primary sm" disabled={moving} onClick={() => {
+            setMoving(true);
+            moveLocalToAccount()
+              .then((n) => setNotice(n ? `${n} ${n === 1 ? 'operação foi levada' : 'operações foram levadas'} para sua conta.` : 'Essas operações já estavam na sua conta.'))
+              .catch(() => setNotice('Não foi possível levar as operações agora. Elas continuam salvas neste navegador; tente de novo em instantes.'))
+              .finally(() => setMoving(false));
+          }}>{moving ? 'Levando…' : 'Levar para minha conta'}</button>
+          <button className="btn ghost sm" onClick={() => { setHideMove(true); try { sessionStorage.setItem('mb:hide-move', '1'); } catch { /* sem storage */ } }}>Agora não</button>
+        </div>
+      )}
 
       <div className="stat-strip">
         <div><div className="k">Patrimônio total</div><div className="v num" style={{ fontSize: 16 }}>{money(total)}</div></div>
@@ -156,11 +186,16 @@ export default function Portfolio() {
         <div><div className="k">Lucro realizado</div><div className={'v num ' + dirClass(realizedBRL)}>{money(realizedBRL)}</div></div>
       </div>
 
-      {!txs.length ? (
+      {pf.loading ? (
+        <Panel><div className="empty" role="status">Carregando sua carteira…</div></Panel>
+      ) : !txs.length ? (
         <Panel>
           <div className="empty" style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
-            <span>Nenhuma operação registrada. Cadastre compras e vendas para acompanhar patrimônio, preço médio e rentabilidade.</span>
-            <button className="btn primary" onClick={() => openForm()}><Icon name="plus" size={14} />Registrar primeira operação</button>
+            <span>Nenhuma operação registrada. Importe a planilha da B3 ou cadastre compras e vendas para acompanhar patrimônio, preço médio e rentabilidade.</span>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+              <button className="btn" onClick={() => setImporting(true)}>Importar da B3</button>
+              <button className="btn primary" onClick={() => openForm()}><Icon name="plus" size={14} />Registrar primeira operação</button>
+            </div>
           </div>
         </Panel>
       ) : (
@@ -228,6 +263,15 @@ export default function Portfolio() {
             </Panel>
           </div>
         </>
+      )}
+
+      {importing && (
+        <B3Import existing={txs} onClose={() => setImporting(false)}
+          onImport={(add) => {
+            setTxs((x) => [...x, ...add]);
+            setImporting(false);
+            setNotice(`${add.length} ${add.length === 1 ? 'operação importada' : 'operações importadas'} da B3.`);
+          }} />
       )}
 
       {form && (

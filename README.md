@@ -50,6 +50,15 @@ Copie `backend/.env.example` para `backend/.env` e preencha as chaves. Elas fica
 
 Ativos sem provedor conectado mostram **dados fictícios marcados como DEMO**. Cotações reais vêm marcadas como **AO VIVO** ou **ATRASO 15MIN**, com o horário da última atualização.
 
+## Conta e carteira (opcional)
+
+O site é aberto e funciona sem login. Quem cria uma conta guarda a carteira no Supabase e acessa de qualquer dispositivo; sem conta, a carteira fica no navegador.
+
+- **Login**: e-mail e senha (Supabase Auth). A biblioteca só é baixada por quem usa o login.
+- **Banco**: tabela `portfolio_transactions` com RLS. Cada pessoa só lê e altera as próprias operações. Esquema em [supabase/migrations](supabase/migrations).
+- **Importação da B3**: Extrato de Negociação ou Posição em Excel, da Área do Investidor. O arquivo é lido no navegador e não é enviado ao servidor.
+- **Configuração**: copie `frontend/.env.example` para `frontend/.env.local` e informe a URL do projeto e a chave publicável (pública por definição; a proteção vem do RLS). Sem essas variáveis o botão "Entrar" não aparece.
+
 ## Estrutura
 
 ```

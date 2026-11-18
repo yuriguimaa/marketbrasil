@@ -7,6 +7,7 @@ import { useMarket } from '../services/marketData';
 import { BullLogo, Icon } from './Icon';
 import { Change, MarketTag } from './ui';
 import { price } from '../lib/format';
+import { authEnabled, signOut, useAuth } from '../services/auth';
 
 const NAV: { group?: string; items: [string, string, string, string?][] }[] = [
   { items: [['/', 'Visão Geral', 'overview']] },
@@ -118,6 +119,21 @@ function Search() {
   );
 }
 
+/** Entrar / conta. O site funciona sem login; a conta só guarda a carteira. */
+function Account() {
+  const { ready, user } = useAuth();
+  const navigate = useNavigate();
+  if (!authEnabled || !ready) return null;
+  if (!user) return <Link to="/entrar" className="btn sm account-btn">Entrar</Link>;
+  const name = user.email?.split('@')[0] ?? 'Conta';
+  return (
+    <span className="account">
+      <Link to="/carteira" className="account-chip" title={user.email}><span className="avatar" aria-hidden="true">{name[0]?.toUpperCase()}</span><span className="hide-sm">{name}</span></Link>
+      <button className="btn ghost sm" onClick={() => { void signOut().finally(() => navigate('/')); }}>Sair</button>
+    </span>
+  );
+}
+
 function Clock() {
   const [now, setNow] = useState(new Date());
   useEffect(() => { const t = setInterval(() => setNow(new Date()), 15000); return () => clearInterval(t); }, []);
@@ -133,6 +149,7 @@ function Clock() {
         <span className={'dot ' + (backend === 'online' && live > 0 ? 'on' : 'warn')} />
         {backend === 'online' && live > 0 ? 'API' : 'Demo'}
       </span>
+      <Account />
     </div>
   );
 }

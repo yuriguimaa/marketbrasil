@@ -47,6 +47,8 @@ export interface Transaction {
   price: number;
   date: string; // AAAA-MM-DD
   fees?: number;
+  /** Origem: digitada no site, importada da planilha da B3 ou trazida do navegador. */
+  source?: 'manual' | 'b3' | 'local';
 }
 
 export interface Settings {
@@ -63,7 +65,8 @@ export const watchlistRepo = localRepo<Watchlist[]>('watchlists', [
   { id: 'dividendos', name: 'Dividendos', symbols: ['BBAS3', 'ITUB4', 'HGLG11', 'MXRF11', 'KO', 'O'] },
 ]);
 
-export const portfolioRepo = localRepo<Transaction[]>('portfolio', []);
+/** Carteira deste navegador (sem login). Com login a carteira vem da conta: veja portfolio.ts. */
+export const localPortfolioRepo = localRepo<Transaction[]>('portfolio', []);
 
 export const settingsRepo = localRepo<Settings>('settings', {
   refreshSec: 5,
