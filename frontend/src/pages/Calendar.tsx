@@ -198,7 +198,9 @@ export default function Calendar() {
                         <span role="cell"><span className={'cal-cc ' + e.country} title={c[1]}>{c[2]}</span></span>
                         <span role="cell"><Importance n={e.importance} /></span>
                         <span role="cell" className="cal-title" title={'Fonte: ' + e.source}>{e.title}{e.id === nextId && <span className="cal-next">próximo</span>}</span>
-                        <span role="cell" className="r num cal-actual" data-label="Atual">{e.actual ?? ''}</span>
+                        <span role="cell" className="r num cal-actual" data-label="Atual">
+                          {e.actual ?? (past && (e.forecast || e.previous) ? <span className="cal-na" title="Já divulgado. A fonte gratuita deste país não informa o resultado." aria-label="Resultado não disponível">n/d</span> : '')}
+                        </span>
                         <span role="cell" className="r num" data-label="Projeção">{e.forecast ?? ''}</span>
                         <span role="cell" className="r num muted" data-label="Anterior">{e.previous ?? ''}</span>
                       </div>

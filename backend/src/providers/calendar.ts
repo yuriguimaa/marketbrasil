@@ -234,6 +234,19 @@ export function categorizeFF(title: string, impact: string): CalCategory {
 /** "0.3%" → "0,3%"; "1,234.5K" → "1.234,5K". */
 const brNum = (v?: string) => { const t = v?.trim(); return t ? t.replace(/,/g, '~').replace(/\./g, ',').replace(/~/g, '.') : undefined; };
 
+/**
+ * O Forex Factory marca como "baixa" alguns indicadores que o mercado brasileiro acompanha de perto
+ * (IPC final da Zona do Euro, estoques de petróleo etc.). Piso de importância por indicador,
+ * próximo ao que os calendários do mercado brasileiro usam. Nunca rebaixa o que a fonte informa.
+ */
+const FLOOR_3 = /^(Core |Flash |Final |Prelim |Flash Core |Final Core )?CPI|^(Advance |Prelim |Final |Flash )?GDP(?! Price)|^Non-Farm Employment|^Unemployment Rate|^Federal Funds Rate|^Main Refinancing Rate|^FOMC (Statement|Meeting Minutes|Press Conference)|^ECB Press Conference|^ISM (Manufacturing|Services) PMI|^(Core )?Retail Sales|^Core PCE Price Index/;
+const FLOOR_2 = /PPI|^Crude Oil Inventories|^Unemployment Claims|^ADP Non-Farm|^JOLTS|^Building Permits|^Housing Starts|^(Existing|New|Pending) Home Sales|^Industrial Production|Durable Goods|^Flash .*PMI|ZEW|Ifo|UoM|^CB Consumer Confidence|^Philly Fed|^Empire State|^Trade Balance|Consumer Confidence|^Natural Gas Storage|^Personal (Spending|Income)|^Average Hourly Earnings|^PCE Price Index|^Fed Chair|^ECB President|^Monetary Policy Statement|^Employment Cost Index/;
+export function floorImportance(title: string): 1 | 2 | 3 {
+  const t = title.replace(/^(German|French|Italian|Spanish) /, '');
+  if (/^(German|French|Italian|Spanish) /.test(title)) return FLOOR_2.test(t) || FLOOR_3.test(t) ? 2 : 1; // dados de um país do bloco
+  return FLOOR_3.test(t) ? 3 : FLOOR_2.test(t) ? 2 : 1;
+}
+
 async function ffEvents(from: number, to: number): Promise<CalEvent[]> {
   // o Forex Factory pede no máximo algumas consultas por hora: cache de 1 hora
   const items = await cached<FFItem[]>('cal:ff:thisweek', 3600_000,
@@ -244,7 +257,7 @@ async function ffEvents(from: number, to: number): Promise<CalEvent[]> {
     const time = Date.parse(it.date);
     if (!country || !isFinite(time) || time < from || time > to) return;
     const category = categorizeFF(it.title, it.impact);
-    const importance = it.impact === 'High' ? 3 : it.impact === 'Medium' ? 2 : 1;
+    const importance = Math.max(it.impact === 'High' ? 3 : it.impact === 'Medium' ? 2 : 1, floorImportance(it.title)) as 1 | 2 | 3;
     out.push({
       id: `ff-${country}-${time}-${i}`, time, allDay: category === 'holiday', country, title: translateFF(it.title), importance, category,
       forecast: brNum(it.forecast), previous: brNum(it.previous), source: 'Forex Factory',
