@@ -5,6 +5,13 @@
  */
 import type { Bar, Fundamentals, NewsItem, Period, ProviderStatus, Quote } from '../types';
 
+export type CalCategory = 'inflation' | 'centralBanks' | 'employment' | 'activity' | 'confidence' | 'trade' | 'bonds' | 'holiday' | 'other';
+export interface CalEvent {
+  id: string; time: number; allDay?: boolean; country: 'BR' | 'US' | 'EU'; title: string;
+  importance: 1 | 2 | 3; category: CalCategory; actual?: string; forecast?: string; previous?: string; source: string;
+}
+export interface EconCalendar { from: number; to: number; events: CalEvent[]; updatedAt: number; partial: string[] }
+
 const BASE: string = (import.meta as any).env?.VITE_API_URL ?? '/api';
 
 async function get<T>(path: string, timeoutMs = 6000): Promise<T | null> {
@@ -35,6 +42,7 @@ export const api = {
   history: (symbol: string, period: Period) =>
     get<{ bars: Bar[]; intraday: boolean; source: Quote['source'] }>(`/history?symbol=${encodeURIComponent(symbol)}&period=${period}`, 10000),
   fundamentals: (symbol: string) => get<Fundamentals>(`/fundamentals?symbol=${encodeURIComponent(symbol)}`),
+  calendar: () => get<EconCalendar>('/calendar', 30000),
   news: (q?: string, limit = 40) =>
     get<{ items: NewsItem[]; updatedAt: number }>(`/news?limit=${limit}${q ? '&q=' + encodeURIComponent(q) : ''}`, 9000),
 };

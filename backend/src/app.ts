@@ -19,6 +19,7 @@ import { fx } from './providers/fx.js';
 import { brapi } from './providers/brapi.js';
 import { finnhub } from './providers/finnhub.js';
 import { news } from './providers/news.js';
+import { calendar } from './providers/calendar.js';
 import { getLogo } from './providers/logos.js';
 import { yahoo, YAHOO_SYMBOLS } from './providers/yahoo.js';
 import { B3_INDEX, B3_SYMBOLS, BCB_SERIES, COINGECKO_IDS, US_SYMBOLS } from './symbols.js';
@@ -36,7 +37,7 @@ const SYMBOL_RE = /^[A-Z0-9^.]{1,12}$/;
 const APP_CSP = [
   "default-src 'self'",
   "script-src 'self' https://s3.tradingview.com",
-  'frame-src https://*.tradingview.com https://*.tradingview-widget.com https://sslecal2.investing.com',
+  'frame-src https://*.tradingview.com https://*.tradingview-widget.com',
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
   "img-src 'self' data:",
@@ -190,6 +191,18 @@ export async function buildApp(): Promise<FastifyInstance> {
       config: limited,
       schema: { querystring: { type: 'object', properties: { q: { type: 'string', maxLength: 100 }, limit: { type: 'integer', minimum: 1, maximum: 100, default: 40 } } } },
     }, async (req) => news.list({ q: req.query.q?.slice(0, 40) || undefined, limit: req.query.limit }));
+
+    api.get('/calendar', { config: limited }, async (_req, reply) => {
+      try {
+        const week = await calendar.week();
+        // a CDN guarda a resposta: poucas consultas por hora às fontes (o Forex Factory limita o acesso)
+        reply.header('Cache-Control', week.partial.length ? 'public, max-age=60, s-maxage=300' : 'public, max-age=300, s-maxage=1800, stale-while-revalidate=3600');
+        return week;
+      } catch (e) {
+        console.warn('[calendar]', (e as Error).message);
+        return reply.code(502).send({ error: 'calendário indisponível no momento' });
+      }
+    });
 
     // logos: cache em memória e no navegador (1 dia), fora do limite de requisições
     api.get<{ Querystring: { symbol: string } }>('/logo', {

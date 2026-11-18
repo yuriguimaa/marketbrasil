@@ -561,14 +561,47 @@ main:focus { outline: none; }
 .cal-chips .chip[aria-pressed='true'] { color: var(--text); background: var(--accent-bg); border-color: rgba(76, 141, 255, .45); }
 .cal-cur { font-size: 10px; color: var(--text-3); font-variant-numeric: tabular-nums; }
 .cal-all { font-size: 11.5px; margin-left: 4px; }
-.cal-dark { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--text-2); cursor: pointer; }
-.cal-frame { position: relative; height: 720px; background: #fff; border-radius: 0 0 var(--radius) var(--radius); overflow: hidden; }
-.cal-frame iframe { display: block; width: 100%; height: 100%; border: 0; }
-.cal-frame.dark { background: #141922; }
-.cal-frame.dark iframe { filter: invert(.9) hue-rotate(180deg); }
-.cal-frame.loading::after { content: 'Carregando agenda…'; position: absolute; inset: 0; display: grid; place-items: center; background: var(--panel); color: var(--text-3); font-size: 12.5px; }
-@media (max-width: 640px) {
+
+.cal-table { font-size: 12.5px; }
+.cal-row { display: grid; grid-template-columns: 64px 52px 58px minmax(0, 1fr) 84px 84px 84px; align-items: center; gap: 0 10px; min-height: var(--row); padding: 0 14px; border-bottom: 1px solid var(--border-soft); }
+.cal-row .r { text-align: right; }
+.cal-headrow { min-height: 32px; font-size: 10.5px; color: var(--text-3); font-weight: 600; letter-spacing: .02em; border-bottom: 1px solid var(--border); position: sticky; top: var(--topbar); background: var(--panel); z-index: 1; }
+.cal-day { padding: 7px 14px; font-size: 11.5px; font-weight: 600; color: var(--text-2); background: var(--panel-2); border-bottom: 1px solid var(--border-soft); }
+.cal-day.today { color: var(--text); box-shadow: inset 3px 0 0 var(--accent); }
+.cal-day.today b { color: var(--accent); font-weight: 600; }
+.cal-time { color: var(--text-2); }
+.cal-row.past { color: var(--text-2); }
+.cal-row.past .cal-title { color: var(--text-2); }
+.cal-row.next { background: var(--accent-bg); box-shadow: inset 3px 0 0 var(--accent); }
+.cal-row.holiday .cal-title { color: var(--text-3); font-style: italic; }
+.cal-title { color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 6px 0; }
+.cal-next { margin-left: 8px; font-size: 10px; font-weight: 600; color: var(--accent); vertical-align: 1px; }
+.cal-actual { font-weight: 700; color: var(--text); }
+.cal-cc { display: inline-block; min-width: 36px; text-align: center; font-size: 10.5px; font-weight: 700; padding: 1px 5px; border-radius: 4px; border: 1px solid; }
+.cal-cc.BR { color: var(--br); border-color: rgba(233, 185, 73, .35); background: rgba(233, 185, 73, .08); }
+.cal-cc.US { color: var(--us); border-color: rgba(110, 168, 254, .35); background: rgba(110, 168, 254, .08); }
+.cal-cc.EU { color: var(--crypto); border-color: rgba(179, 148, 247, .35); background: rgba(179, 148, 247, .08); }
+.cal-imp { display: inline-flex; gap: 1px; }
+.cal-imp > span { display: inline-flex; color: var(--text-3); opacity: .3; }
+.cal-imp > span.on { opacity: 1; }
+.cal-imp.lv3 > span.on { color: var(--down); }
+.cal-imp.lv2 > span.on { color: var(--warn); }
+.cal-imp.lv1 > span.on { color: var(--text-2); }
+.cal-partial { margin: 10px 14px 0; font-size: 12px; color: var(--warn); }
+
+@media (max-width: 720px) {
   .cal-filter { grid-template-columns: 1fr; gap: 6px; }
   .cal-filter-label { padding-top: 0; }
-  .cal-frame { height: 640px; }
+  .cal-headrow { display: none; }
+  .cal-row { grid-template-columns: auto auto auto 1fr; grid-template-areas: 't c i .' 'e e e e' 'a f p p'; gap: 4px 8px; padding: 8px 14px; }
+  .cal-row > :nth-child(1) { grid-area: t; }
+  .cal-row > :nth-child(2) { grid-area: c; }
+  .cal-row > :nth-child(3) { grid-area: i; }
+  .cal-row > :nth-child(4) { grid-area: e; white-space: normal; padding: 0; }
+  .cal-row > :nth-child(5) { grid-area: a; }
+  .cal-row > :nth-child(6) { grid-area: f; }
+  .cal-row > :nth-child(7) { grid-area: p; }
+  .cal-row .r { text-align: left; font-size: 11.5px; }
+  .cal-row .r:empty { display: none; }
+  .cal-row .r:not(:empty)::before { content: attr(data-label) ' '; color: var(--text-3); font-weight: 400; }
 }
