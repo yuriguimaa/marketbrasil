@@ -3,10 +3,14 @@
   "private": true,
   "type": "module",
   "version": "0.1.0",
-  "workspaces": ["frontend", "backend"],
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
   "scripts": {
     "dev:web": "npm run dev -w frontend",
     "dev:api": "npm run dev -w backend",
-    "build": "npm run build -w frontend"
+    "build": "npm run build -w backend && npm run build -w frontend",
+    "start": "npm start -w backend"
   }
 }

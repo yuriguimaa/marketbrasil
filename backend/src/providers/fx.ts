@@ -1,16 +1,19 @@
 import { cached, getJSON } from '../cache.js';
+import type { History, Period, Provider, Quotes } from '../types.js';
+
+interface FxRow { bid: string; varBid?: string; pctChange: string; high: string; low: string; timestamp: string }
 
 // AwesomeAPI — cotações de câmbio (sem chave)
-export const fx = {
+export const fx: Provider = {
   id: 'awesomeapi', name: 'AwesomeAPI', scope: 'Dólar comercial (USD/BRL)',
   enabled: () => true,
   note: 'API pública, sem chave. Atualização a cada ~30 s.',
-  supports: (s) => s === 'USDBRL',
+  supports: (s: string) => s === 'USDBRL',
 
-  async quotes(symbols) {
+  async quotes(symbols: string[]): Promise<Quotes> {
     if (!symbols.includes('USDBRL')) return {};
-    const r = (await cached('fx:last', 30_000, () => getJSON('https://economia.awesomeapi.com.br/json/last/USD-BRL'))).USDBRL;
-    const price = parseFloat(r.bid), change = parseFloat(r.varBid);
+    const r = (await cached<{ USDBRL: FxRow }>('fx:last', 30_000, () => getJSON('https://economia.awesomeapi.com.br/json/last/USD-BRL'))).USDBRL;
+    const price = parseFloat(r.bid), change = parseFloat(r.varBid ?? '0');
     return {
       USDBRL: {
         symbol: 'USDBRL', price, prevClose: price - change, change, changePct: parseFloat(r.pctChange),
@@ -20,15 +23,15 @@ export const fx = {
     };
   },
 
-  async history(symbol, period) {
+  async history(symbol: string, period: Period): Promise<History | null> {
     if (symbol !== 'USDBRL' || period === '1D' || period === '1S') return null;
-    const n = { '1M': 30, '3M': 90, '6M': 180, '1A': 365, '5A': 360, MAX: 360 }[period];
-    const rows = await cached(`fx:daily:${n}`, 30 * 60_000, () => getJSON(`https://economia.awesomeapi.com.br/json/daily/USD-BRL/${n}`));
+    const n = ({ '1M': 30, '3M': 90, '6M': 180, '1A': 365, '5A': 360, MAX: 360 } as Record<string, number>)[period];
+    const rows = await cached<FxRow[]>(`fx:daily:${n}`, 30 * 60_000, () => getJSON(`https://economia.awesomeapi.com.br/json/daily/USD-BRL/${n}`));
     const bars = rows.map((r) => {
       const c = parseFloat(r.bid), ch = parseFloat(r.varBid || '0');
       return { time: Math.floor(Number(r.timestamp) / 86400) * 86400, open: c - ch, high: parseFloat(r.high), low: parseFloat(r.low), close: c, volume: 0 };
     }).reverse();
-    const seen = new Set();
+    const seen = new Set<number>();
     return { bars: bars.filter((b) => !seen.has(b.time) && seen.add(b.time)), intraday: false, source: 'live' };
   },
 };

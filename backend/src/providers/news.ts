@@ -1,4 +1,5 @@
 import { cached, getText } from '../cache.js';
+import type { NewsItem } from '../types.js';
 
 // Agregador de notícias: feeds RSS públicos de portais financeiros brasileiros.
 const FEEDS = [
@@ -9,16 +10,16 @@ const FEEDS = [
   { source: 'Seu Dinheiro', url: 'https://www.seudinheiro.com/feed/' },
 ];
 
-const ENT = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
-const decode = (s) => s
+const ENT: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
+const decode = (s: string) => s
   .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
-  .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(+n))
-  .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16)))
-  .replace(/&(\w+);/g, (m, e) => ENT[e] ?? m);
-const strip = (s) => decode(s).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-const tag = (xml, t) => { const m = xml.match(new RegExp(`<${t}[^>]*>([\\s\\S]*?)</${t}>`, 'i')); return m ? m[1] : ''; };
+  .replace(/&#(\d+);/g, (_, n: string) => String.fromCodePoint(+n))
+  .replace(/&#x([0-9a-f]+);/gi, (_, n: string) => String.fromCodePoint(parseInt(n, 16)))
+  .replace(/&(\w+);/g, (m, e: string) => ENT[e] ?? m);
+const strip = (s: string) => decode(s).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+const tag = (xml: string, t: string) => { const m = xml.match(new RegExp(`<${t}[^>]*>([\\s\\S]*?)</${t}>`, 'i')); return m ? m[1] : ''; };
 
-const NAMES = {
+const NAMES: Record<string, RegExp> = {
   PETR4: /petrobras/i, VALE3: /\bvale\b/i, ITUB4: /ita[uú]/i, BBAS3: /banco do brasil/i, WEGE3: /\bweg\b/i,
   BBDC4: /bradesco/i, PRIO3: /\bprio\b/i, MGLU3: /magazine luiza|magalu/i, ABEV3: /ambev/i, B3SA3: /\bB3\b/,
   ELET3: /eletrobras/i, EMBR3: /embraer/i, SUZB3: /suzano/i, JBSS3: /\bjbs\b/i, RENT3: /localiza/i,
@@ -26,7 +27,7 @@ const NAMES = {
   AAPL: /apple/i, NVDA: /nvidia/i, MSFT: /microsoft/i, TSLA: /tesla/i, AMZN: /amazon/i, META: /\bmeta\b/i, GOOGL: /google|alphabet/i,
 };
 
-const CATS = [
+const CATS: [string, RegExp][] = [
   ['Cripto', /bitcoin|cripto|ethereum|blockchain|solana/i],
   ['FIIs', /\bFII|fundos? imobili|IFIX/i],
   ['Câmbio', /d[oó]lar|c[aâ]mbio|real se/i],
@@ -40,17 +41,17 @@ const CATS = [
 // Seções fora do tema mercado financeiro
 const OFF_TOPIC = /\/(brasil|politica|esportes?|saude|entretenimento|lifestyle|cultura|celebridades)\//i;
 
-function parse(xml, source) {
+function parse(xml: string, source: string): NewsItem[] {
   const items = xml.split(/<item[\s>]/i).slice(1).map((chunk) => chunk.split(/<\/item>/i)[0]);
   return items.map((it) => {
     const title = strip(tag(it, 'title'));
     const link = strip(tag(it, 'link')) || strip(tag(it, 'guid'));
     let desc = strip(strip(tag(it, 'description')));
-    if (/="|data-[a-z-]+=/.test(desc)) desc = desc.split(/\/>|">/).pop().trim();
+    if (/="|data-[a-z-]+=/.test(desc)) desc = (desc.split(/\/>|">/).pop() ?? '').trim();
     desc = desc.replace(/\s*The post .*$|\s*O post .*$/i, '').slice(0, 280);
     const pub = Date.parse(strip(tag(it, 'pubDate'))) || Date.now();
     const text = title + ' ' + desc;
-    const tickers = new Set((title.match(/\b[A-Z]{4}\d{1,2}\b/g) ?? []));
+    const tickers = new Set<string>((title.match(/\b[A-Z]{4}\d{1,2}\b/g) ?? []));
     for (const [sym, re] of Object.entries(NAMES)) if (re.test(title)) tickers.add(sym);
     const category = (CATS.find(([, re]) => re.test(text)) ?? ['Geral'])[0];
     return { id: Buffer.from(link || title).toString('base64url').slice(-40), title, summary: desc, url: link.startsWith('http') ? link : undefined, source, category, publishedAt: pub, tickers: [...tickers] };
@@ -62,11 +63,11 @@ export const news = {
   enabled: () => true,
   note: 'Feeds públicos; links abrem no site original.',
 
-  async list({ q, limit = 40 } = {}) {
+  async list({ q, limit = 40 }: { q?: string; limit?: number } = {}): Promise<{ items: NewsItem[]; updatedAt: number }> {
     const all = await cached('news:all', 5 * 60_000, async () => {
       const res = await Promise.allSettled(FEEDS.map((f) => getText(f.url, 10000).then((x) => parse(x, f.source))));
       const items = res.flatMap((r) => (r.status === 'fulfilled' ? r.value : []));
-      const seen = new Set();
+      const seen = new Set<string>();
       return items.filter((n) => { const k = n.title.toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; })
         .sort((a, b) => b.publishedAt - a.publishedAt);
     });

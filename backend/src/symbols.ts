@@ -1,5 +1,5 @@
 /** Mapeamento entre os tickers da plataforma e os identificadores de cada provedor. */
-export const COINGECKO_IDS = {
+export const COINGECKO_IDS: Record<string, string> = {
   BTC: 'bitcoin', ETH: 'ethereum', SOL: 'solana', BNB: 'binancecoin', XRP: 'ripple',
   DOGE: 'dogecoin', ADA: 'cardano', AVAX: 'avalanche-2', LINK: 'chainlink', DOT: 'polkadot',
 };
@@ -11,7 +11,7 @@ export const B3_SYMBOLS = new Set([
   'AAPL34', 'NVDC34', 'MSFT34', 'AMZO34', 'TSLA34', 'GOGL34',
 ]);
 /** Índices B3 na brapi */
-export const B3_INDEX = { IBOV: '^BVSP' };
+export const B3_INDEX: Record<string, string> = { IBOV: '^BVSP' };
 /** Tickers liberados pela brapi sem token (plano de teste). */
 export const BRAPI_FREE = new Set(['PETR4', 'VALE3', 'MGLU3', 'ITUB4']);
 
@@ -20,4 +20,4 @@ export const US_SYMBOLS = new Set([
   'SPY', 'QQQ', 'IWM', 'DIA', 'VOO', 'VTI', 'GLD', 'TLT', 'ARKK', 'O', 'PLD', 'AMT', 'EQIX', 'SPG', 'VICI',
 ]);
 
-export const BCB_SERIES = { SELIC: 432, CDI: 4389 };
+export const BCB_SERIES: Record<string, number> = { SELIC: 432, CDI: 4389 };

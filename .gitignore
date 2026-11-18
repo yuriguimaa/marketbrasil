@@ -9,3 +9,4 @@ backend/.env
 .claude/
 *.log
 !backend/.env.example
+backend/dist/

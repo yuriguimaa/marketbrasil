@@ -1,8 +1,8 @@
 /**
  * Função serverless da Vercel: todas as rotas /api/* chegam aqui
- * (rewrite em vercel.json) e são tratadas pelo mesmo handler do servidor local.
+ * (rewrite em vercel.json) e são tratadas pela mesma aplicação Fastify do servidor local (compilada em backend/dist).
  */
-import { handler } from '../backend/src/server.js';
+import { handler } from '../backend/dist/app.js';
 
 export default function vercelHandler(req, res) {
   const url = new URL(req.url ?? '/', 'http://localhost');

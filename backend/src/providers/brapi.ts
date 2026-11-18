@@ -1,20 +1,28 @@
 import { cached, getJSON } from '../cache.js';
 import { config } from '../config.js';
 import { B3_INDEX, B3_SYMBOLS, BRAPI_FREE } from '../symbols.js';
+import type { Fundamentals, History, Period, Provider, Quotes } from '../types.js';
+
+interface BrapiRow { date: number; open?: number; high?: number; low?: number; close: number; volume?: number }
+interface BrapiResult {
+  regularMarketPrice?: number; regularMarketPreviousClose?: number; regularMarketChange?: number; regularMarketChangePercent?: number;
+  regularMarketOpen?: number; regularMarketDayHigh?: number; regularMarketDayLow?: number; regularMarketVolume?: number;
+  marketCap?: number; regularMarketTime?: string; priceEarnings?: number | null; historicalDataPrice?: BrapiRow[];
+}
 
 // brapi.dev — cotações da B3 (atraso típico de ~15 min no plano gratuito)
 const BASE = 'https://brapi.dev/api/quote/';
-const toBrapi = (s) => B3_INDEX[s] ?? s;
-const allowed = (s) => (B3_SYMBOLS.has(s) || s in B3_INDEX) && (!!config.brapiToken || BRAPI_FREE.has(s));
+const toBrapi = (s: string) => B3_INDEX[s] ?? s;
+const allowed = (s: string) => (B3_SYMBOLS.has(s) || s in B3_INDEX) && (!!config.brapiToken || BRAPI_FREE.has(s));
 
-async function one(sym, extra = '') {
+async function one(sym: string, extra = ''): Promise<BrapiResult | undefined> {
   const q = [config.brapiToken ? `token=${config.brapiToken}` : '', extra].filter(Boolean).join('&');
-  const data = await cached(`brapi:${sym}:${extra}`, extra ? 15 * 60_000 : 60_000, () =>
+  const data = await cached<{ results?: BrapiResult[] }>(`brapi:${sym}:${extra}`, extra ? 15 * 60_000 : 60_000, () =>
     getJSON(`${BASE}${encodeURIComponent(toBrapi(sym))}${q ? '?' + q : ''}`));
   return data?.results?.[0];
 }
 
-export const brapi = {
+export const brapi: Provider & { fundamentals(symbol: string): Promise<Fundamentals | null> } = {
   id: 'brapi', name: 'brapi.dev', scope: 'B3: ações, FIIs, ETFs, BDRs, Ibovespa',
   enabled: () => true,
   get note() {
@@ -24,16 +32,16 @@ export const brapi = {
   },
   supports: allowed,
 
-  async quotes(symbols) {
+  async quotes(symbols: string[]): Promise<Quotes> {
     const list = symbols.filter(allowed);
-    const out = {};
+    const out: Quotes = {};
     for (let i = 0; i < list.length; i += 4) {
       const chunk = list.slice(i, i + 4);
       const res = await Promise.allSettled(chunk.map((s) => one(s)));
       res.forEach((r, j) => {
         const d = r.status === 'fulfilled' ? r.value : null;
         if (!d || d.regularMarketPrice == null) return;
-        const p = d.regularMarketPrice;
+        const p: number = d.regularMarketPrice;
         out[chunk[j]] = {
           symbol: chunk[j], price: p,
           prevClose: d.regularMarketPreviousClose ?? p - (d.regularMarketChange ?? 0),
@@ -41,17 +49,17 @@ export const brapi = {
           open: d.regularMarketOpen ?? p, high: d.regularMarketDayHigh ?? p, low: d.regularMarketDayLow ?? p,
           volume: d.regularMarketVolume ?? 0, volumeFin: (d.regularMarketVolume ?? 0) * p,
           marketCap: d.marketCap ?? undefined,
-          updatedAt: Date.parse(d.regularMarketTime) || Date.now(), source: 'delayed', delayMin: 15, provider: 'brapi.dev',
+          updatedAt: Date.parse(d.regularMarketTime ?? '') || Date.now(), source: 'delayed', delayMin: 15, provider: 'brapi.dev',
         };
       });
     }
     return out;
   },
 
-  async history(symbol, period) {
+  async history(symbol: string, period: Period): Promise<History | null> {
     if (!allowed(symbol)) return null;
     // plano gratuito da brapi: só intervalo diário e ranges até 3 meses (o resto vem do Yahoo)
-    const range = { '1M': '1mo', '3M': '3mo' }[period];
+    const range = ({ '1M': '1mo', '3M': '3mo' } as Partial<Record<Period, string>>)[period];
     if (!range) return null;
     const interval = '1d';
     const d = await one(symbol, `range=${range}&interval=${interval}`);
@@ -63,7 +71,7 @@ export const brapi = {
     return { bars, intraday: period === '1D' || period === '1S', source: 'delayed' };
   },
 
-  async fundamentals(symbol) {
+  async fundamentals(symbol: string): Promise<Fundamentals | null> {
     if (!allowed(symbol) || symbol in B3_INDEX) return null;
     const d = await one(symbol, 'fundamental=true');
     if (!d || d.priceEarnings == null) return null;
