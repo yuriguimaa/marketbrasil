@@ -71,7 +71,7 @@ export function cleanBars(bars: Bar[]): Bar[] {
 // ---------- Arquivos do frontend ----------
 const DIST = resolve(fileURLToPath(new URL('../../frontend/dist/', import.meta.url)));
 /** Rotas do frontend (React Router). Demais caminhos sem arquivo recebem a SPA com status 404 real. */
-const SPA_ROUTE = /^\/(?:(?:brasil|eua|cripto|etfs|rankings|analise|watchlist|carteira|noticias|configuracoes|sobre)\/?|ativo\/[A-Za-z0-9^.]{1,12}\/?)?$/;
+const SPA_ROUTE = /^\/(?:(?:brasil|eua|cripto|etfs|rankings|analise|watchlist|carteira|noticias|configuracoes|sobre|entrar)\/?|ativo\/[A-Za-z0-9^.]{1,12}\/?)?$/;
 
 // ---------- Aplicação ----------
 export async function buildApp(): Promise<FastifyInstance> {

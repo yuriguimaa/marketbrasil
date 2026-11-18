@@ -21,7 +21,7 @@ function seoFiles(): Plugin {
       const urls = [...PUBLIC_ROUTES, ...ASSET_ROUTES].map((p) =>
         `  <url><loc>${site}${p}</loc><lastmod>${today}</lastmod><changefreq>${p.startsWith('/ativo') ? 'hourly' : 'daily'}</changefreq></url>`).join('\n');
       this.emitFile({ type: 'asset', fileName: 'sitemap.xml', source: `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n` });
-      this.emitFile({ type: 'asset', fileName: 'robots.txt', source: `User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /watchlist\nDisallow: /carteira\nDisallow: /configuracoes\n\nSitemap: ${site}/sitemap.xml\n` });
+      this.emitFile({ type: 'asset', fileName: 'robots.txt', source: `User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /watchlist\nDisallow: /carteira\nDisallow: /configuracoes\nDisallow: /entrar\n\nSitemap: ${site}/sitemap.xml\n` });
     },
     // 404.html = cópia da SPA: hospedagens estáticas (Vercel) a servem com status 404 real
     closeBundle() {
