@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 import react from '@vitejs/plugin-react';
 
 // Páginas públicas indexáveis (watchlist, carteira e configurações são pessoais).
-const PUBLIC_ROUTES = ['/', '/brasil', '/eua', '/cripto', '/etfs', '/rankings', '/analise', '/noticias', '/sobre'];
+const PUBLIC_ROUTES = ['/', '/brasil', '/eua', '/cripto', '/etfs', '/rankings', '/analise', '/noticias', '/calendario', '/sobre'];
 const ASSET_ROUTES = ['PETR4', 'VALE3', 'ITUB4', 'BBAS3', 'WEGE3', 'BBDC4', 'PRIO3', 'MGLU3', 'ABEV3', 'B3SA3', 'IBOV',
   'AAPL', 'NVDA', 'MSFT', 'AMZN', 'GOOGL', 'META', 'TSLA', 'AMD', 'NFLX', 'JPM', 'SPX', 'BTC', 'ETH', 'SOL', 'BNB'].map((s) => '/ativo/' + s);
 

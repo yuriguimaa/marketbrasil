@@ -41,6 +41,7 @@ const News = lazy(() => import('./pages/News'));
 const Settings = lazy(() => import('./pages/Settings'));
 const About = lazy(() => import('./pages/About'));
 const Login = lazy(() => import('./pages/Login'));
+const Calendar = lazy(() => import('./pages/Calendar'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 const page = (el: React.ReactNode) => <Suspense fallback={<div className="page-loading" role="status" aria-label="Carregando página" />}>{el}</Suspense>;
@@ -64,6 +65,7 @@ function App() {
         <Route path="/watchlist" element={page(<Watchlist />)} />
         <Route path="/carteira" element={page(<Portfolio />)} />
         <Route path="/noticias" element={page(<News />)} />
+        <Route path="/calendario" element={page(<Calendar />)} />
         <Route path="/configuracoes" element={page(<Settings />)} />
         <Route path="/sobre" element={page(<About />)} />
         <Route path="/entrar" element={page(<Login />)} />

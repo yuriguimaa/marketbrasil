@@ -21,6 +21,7 @@ const P: Record<string, string> = {
   refresh: 'M20 11a8 8 0 10-2.3 5.7M20 4v7h-7',
   ext: 'M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h5',
   back: 'M15 18l-6-6 6-6',
+  calendar: 'M4 6a2 2 0 012-2h12a2 2 0 012 2v13a2 2 0 01-2 2H6a2 2 0 01-2-2zM4 10h16M8 2v4M16 2v4M8 14h2M14 14h2M8 17h2',
   info: 'M12 3a9 9 0 100 18 9 9 0 000-18zM12 11v6M12 7.5v.01',
 };
 

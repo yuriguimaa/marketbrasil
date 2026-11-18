@@ -21,6 +21,7 @@ const NAV: { group?: string; items: [string, string, string, string?][] }[] = [
     ['/rankings', 'Rankings', 'ranking'],
     ['/analise', 'Análise de Ativos', 'analysis'],
     ['/noticias', 'Notícias', 'news'],
+    ['/calendario', 'Calendário Econômico', 'calendar'],
   ] },
   { group: 'Pessoal', items: [
     ['/watchlist', 'Minha Watchlist', 'star'],
