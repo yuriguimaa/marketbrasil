@@ -12,7 +12,6 @@ import compress from '@fastify/compress';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
-import fastifyStatic from '@fastify/static';
 import './config.js';
 import { coingecko } from './providers/coingecko.js';
 import { bcb } from './providers/bcb.js';
@@ -205,8 +204,11 @@ export async function buildApp(): Promise<FastifyInstance> {
   }, { prefix: '/api' });
 
   // ---------- Frontend compilado (servidor próprio; na Vercel o site estático é servido por ela) ----------
-  const hasDist = existsSync(resolve(DIST, 'index.html'));
+  // Na Vercel o site é servido pela própria plataforma: não há frontend/dist dentro da função.
+  // O plugin é carregado só quando necessário (algumas versões do Node na Vercel não suportam suas dependências ESM).
+  const hasDist = !process.env.VERCEL && existsSync(resolve(DIST, 'index.html'));
   if (hasDist) {
+    const { default: fastifyStatic } = await import('@fastify/static');
     await app.register(fastifyStatic, {
       root: DIST,
       cacheControl: false,
