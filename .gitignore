@@ -10,3 +10,4 @@ backend/.env
 *.log
 !backend/.env.example
 backend/dist/
+*.tsbuildinfo
