@@ -554,13 +554,36 @@ main:focus { outline: none; }
 .b3-skipped ul { margin: 6px 0 0; padding-left: 18px; max-height: 120px; overflow-y: auto; }
 
 /* ---------- Calendário econômico ---------- */
-.cal-filters { display: grid; gap: 12px; }
-.cal-filter { display: grid; grid-template-columns: 96px 1fr; align-items: start; gap: 10px; }
-.cal-filter-label { font-size: 11.5px; color: var(--text-3); padding-top: 4px; }
-.cal-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-.cal-chips .chip[aria-pressed='true'] { color: var(--text); background: var(--accent-bg); border-color: rgba(76, 141, 255, .45); }
-.cal-cur { font-size: 10px; color: var(--text-3); font-variant-numeric: tabular-nums; }
-.cal-all { font-size: 11.5px; margin-left: 4px; }
+
+/* filtros: listas suspensas de múltipla escolha */
+.cal-filterbar { position: relative; z-index: 5; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) auto; align-items: end; gap: 12px; padding: 14px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; }
+.msel { position: relative; display: grid; gap: 6px; min-width: 0; }
+.msel-label { font-size: 11.5px; color: var(--text-2); font-weight: 500; }
+.msel-btn { display: flex; align-items: center; gap: 8px; width: 100%; height: 38px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--panel-2); color: var(--text); font: inherit; font-size: 13px; text-align: left; cursor: pointer; transition: border-color .15s, background .15s; }
+.msel-btn:hover { border-color: #33405a; background: var(--hover); }
+.msel-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.msel.open .msel-btn { border-color: var(--accent); background: var(--hover); }
+.msel-btn.empty .msel-value { color: var(--warn); }
+.msel-value { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.msel-tags { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.msel-tags > span:last-child { overflow: hidden; text-overflow: ellipsis; }
+.msel-caret { flex: none; color: var(--text-3); transition: transform .15s; }
+.msel.open .msel-caret { transform: rotate(180deg); color: var(--accent); }
+.msel-pop { position: absolute; top: calc(100% + 6px); left: 0; z-index: 30; width: max(100%, 240px); padding: 6px; background: var(--panel-2); border: 1px solid #2c3647; border-radius: 10px; box-shadow: 0 18px 40px -12px rgba(0, 0, 0, .75); transform-origin: top left; animation: msel-in .12s ease-out; }
+@keyframes msel-in { from { opacity: 0; transform: translateY(-4px) scale(.98); } }
+.msel-head { display: flex; justify-content: space-between; padding: 4px 8px 8px; border-bottom: 1px solid var(--border-soft); margin-bottom: 4px; font-size: 11.5px; }
+.msel-head .link-btn:disabled { color: var(--text-3); cursor: default; text-decoration: none; }
+.msel-list { display: grid; max-height: 300px; overflow-y: auto; }
+.msel-opt { position: relative; display: flex; align-items: center; gap: 10px; min-height: 34px; padding: 0 8px; border-radius: 6px; font-size: 13px; color: var(--text); cursor: pointer; }
+.msel-opt:hover { background: var(--hover); }
+.msel-opt input { position: absolute; opacity: 0; pointer-events: none; }
+.msel-box { flex: none; width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid #46536b; display: grid; place-items: center; transition: background .12s, border-color .12s; }
+.msel-opt input:checked + .msel-box { background: var(--accent); border-color: var(--accent); }
+.msel-opt input:checked + .msel-box::after { content: ''; width: 8px; height: 4px; border: 2px solid #fff; border-top: 0; border-right: 0; transform: translateY(-1px) rotate(-45deg); }
+.msel-opt input:focus-visible + .msel-box { outline: 2px solid var(--accent); outline-offset: 2px; }
+.msel-name { flex: 1; }
+.cal-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; padding-bottom: 2px; font-size: 12px; color: var(--text-2); white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { .msel-pop { animation: none; } .msel-caret { transition: none; } }
 
 .cal-table { font-size: 12.5px; }
 .cal-row { display: grid; grid-template-columns: 64px 52px 58px minmax(0, 1fr) 84px 84px 84px; align-items: center; gap: 0 10px; min-height: var(--row); padding: 0 14px; border-bottom: 1px solid var(--border-soft); }
@@ -590,8 +613,8 @@ main:focus { outline: none; }
 .cal-partial { margin: 10px 14px 0; font-size: 12px; color: var(--warn); }
 
 @media (max-width: 720px) {
-  .cal-filter { grid-template-columns: 1fr; gap: 6px; }
-  .cal-filter-label { padding-top: 0; }
+  .cal-filterbar { grid-template-columns: 1fr; }
+  .cal-meta { flex-direction: row; justify-content: space-between; align-items: center; }
   .cal-headrow { display: none; }
   .cal-row { grid-template-columns: auto auto auto 1fr; grid-template-areas: 't c i .' 'e e e e' 'a f p p'; gap: 4px 8px; padding: 8px 14px; }
   .cal-row > :nth-child(1) { grid-area: t; }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import { usePageMeta } from '../lib/pageMeta';
 import { localRepo, useRepo } from '../services/storage';
 import { api, type CalCategory, type CalEvent, type EconCalendar } from '../services/api';
@@ -19,9 +19,9 @@ const CATEGORIES: [CalCategory, string][] = [
 ];
 
 interface Filters { countries: Country[]; importance: string[]; categories: CalCategory[]; period: 'day' | 'week' }
-const calendarRepo = localRepo<Filters>('calendar-v2', {
-  countries: ['BR', 'US', 'EU'], importance: ['3', '2'], categories: CATEGORIES.map((c) => c[0]), period: 'week',
-});
+const DEFAULTS: Filters = { countries: ['BR', 'US', 'EU'], importance: ['3', '2'], categories: CATEGORIES.map((c) => c[0]), period: 'week' };
+const calendarRepo = localRepo<Filters>('calendar-v2', DEFAULTS);
+const sameSet = (a: string[], b: string[]) => a.length === b.length && a.every((x) => b.includes(x));
 
 const TZ = 'America/Sao_Paulo';
 const dayKey = (t: number) => new Date(t).toLocaleDateString('en-CA', { timeZone: TZ });
@@ -31,25 +31,62 @@ const dayLabel = (t: number) => {
   return s.charAt(0).toUpperCase() + s.slice(1);
 };
 
-function Chips<T extends string>({ label, options, value, onChange }: { label: string; options: [T, string, string?][]; value: T[]; onChange: (v: T[]) => void }) {
+/**
+ * Lista suspensa de múltipla escolha: botão com o resumo da seleção e um painel
+ * com caixas de seleção. Fecha ao clicar fora ou com Esc (o foco volta ao botão).
+ */
+function MultiSelect<T extends string>({ label, options, value, onChange, summary, renderOption }: {
+  label: string; options: [T, string][]; value: T[]; onChange: (v: T[]) => void;
+  summary: ReactNode; renderOption?: (id: T, name: string) => ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  const root = useRef<HTMLDivElement>(null);
+  const btn = useRef<HTMLButtonElement>(null);
+  const id = useId();
+
+  useEffect(() => {
+    if (!open) return;
+    const away = (e: PointerEvent) => { if (!root.current?.contains(e.target as Node)) setOpen(false); };
+    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') { setOpen(false); btn.current?.focus(); } };
+    document.addEventListener('pointerdown', away);
+    document.addEventListener('keydown', key);
+    root.current?.querySelector<HTMLInputElement>('input')?.focus();
+    return () => { document.removeEventListener('pointerdown', away); document.removeEventListener('keydown', key); };
+  }, [open]);
+
   const all = value.length === options.length;
+  const toggle = (k: T) => onChange(value.includes(k) ? value.filter((x) => x !== k) : options.map((o) => o[0]).filter((o) => o === k || value.includes(o)));
   return (
-    <div className="cal-filter" role="group" aria-label={label}>
-      <span className="cal-filter-label">{label}</span>
-      <div className="cal-chips">
-        {options.map(([id, name, code]) => {
-          const on = value.includes(id);
-          return (
-            <button key={id} type="button" className="chip" aria-pressed={on} onClick={() => onChange(on ? value.filter((x) => x !== id) : [...value, id])}>
-              {name}{code && <span className="cal-cur">{code}</span>}
-            </button>
-          );
-        })}
-        {options.length > 3 && <button type="button" className="link-btn cal-all" onClick={() => onChange(all ? [] : options.map((o) => o[0]))}>{all ? 'Limpar' : 'Todas'}</button>}
-      </div>
+    <div className={'msel' + (open ? ' open' : '')} ref={root}>
+      <span className="msel-label" id={id + '-l'}>{label}</span>
+      <button ref={btn} type="button" className={'msel-btn' + (value.length ? '' : ' empty')} aria-haspopup="true" aria-expanded={open}
+        aria-controls={id + '-p'} aria-labelledby={id + '-l ' + id + '-v'} onClick={() => setOpen((o) => !o)}>
+        <span className="msel-value" id={id + '-v'}>{summary}</span>
+        <svg className="msel-caret" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5 5 6.5 8 3.5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+      </button>
+      {open && (
+        <div className="msel-pop" id={id + '-p'} role="group" aria-label={label}>
+          <div className="msel-head">
+            <button type="button" className="link-btn" onClick={() => onChange(options.map((o) => o[0]))} disabled={all}>Selecionar todos</button>
+            <button type="button" className="link-btn" onClick={() => onChange([])} disabled={!value.length}>Limpar</button>
+          </div>
+          <div className="msel-list">
+            {options.map(([k, name]) => (
+              <label key={k} className="msel-opt">
+                <input type="checkbox" checked={value.includes(k)} onChange={() => toggle(k)} />
+                <span className="msel-box" aria-hidden="true" />
+                {renderOption ? renderOption(k, name) : <span className="msel-name">{name}</span>}
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
+const SHORT: Record<Country, string> = { BR: 'Brasil', US: 'EUA', EU: 'Zona do Euro' };
+const joinPt = (xs: string[]) => (xs.length < 2 ? xs.join('') : xs.slice(0, -1).join(', ') + ' e ' + xs[xs.length - 1]);
 
 const IMP_LABEL = ['', 'Importância baixa', 'Importância média', 'Importância alta'];
 function Importance({ n }: { n: 1 | 2 | 3 }) {
@@ -86,6 +123,7 @@ export default function Calendar() {
     return [...m];
   }, [shown]);
   const nextId = shown.find((e) => !e.allDay && e.time >= now)?.id;
+  const isDefault = sameSet(f.countries, DEFAULTS.countries) && sameSet(f.importance, DEFAULTS.importance) && sameSet(f.categories, DEFAULTS.categories);
 
   return (
     <>
@@ -99,13 +137,26 @@ export default function Calendar() {
         </div>
       </div>
 
-      <Panel>
-        <div className="cal-filters">
-          <Chips label="País" options={COUNTRIES} value={f.countries} onChange={(countries) => setF({ ...f, countries })} />
-          <Chips label="Importância" options={IMPORTANCE} value={f.importance as ('3' | '2' | '1')[]} onChange={(importance) => setF({ ...f, importance })} />
-          <Chips label="Categoria" options={CATEGORIES} value={f.categories} onChange={(categories) => setF({ ...f, categories })} />
+      <div className="cal-filterbar">
+        <MultiSelect label="País" options={COUNTRIES.map(([k, n]) => [k, n] as [Country, string])} value={f.countries}
+          onChange={(countries) => setF({ ...f, countries })}
+          summary={f.countries.length === COUNTRIES.length ? 'Todos os países' : !f.countries.length ? 'Nenhum país'
+            : joinPt(COUNTRIES.filter((c) => f.countries.includes(c[0])).map((c) => SHORT[c[0]]))}
+          renderOption={(k, name) => <><span className="msel-name">{name}</span><span className={'cal-cc ' + k}>{COUNTRIES.find((c) => c[0] === k)![2]}</span></>} />
+        <MultiSelect label="Categoria" options={CATEGORIES} value={f.categories}
+          onChange={(categories) => setF({ ...f, categories })}
+          summary={f.categories.length === CATEGORIES.length ? 'Todas as categorias' : !f.categories.length ? 'Nenhuma categoria'
+            : f.categories.length <= 2 ? joinPt(CATEGORIES.filter((c) => f.categories.includes(c[0])).map((c) => c[1])) : `${f.categories.length} categorias`} />
+        <MultiSelect label="Importância" options={IMPORTANCE} value={f.importance as ('3' | '2' | '1')[]}
+          onChange={(importance) => setF({ ...f, importance })}
+          summary={f.importance.length === 3 ? 'Qualquer' : !f.importance.length ? 'Nenhuma'
+            : <span className="msel-tags"><Importance n={Math.max(...f.importance.map(Number)) as 1 | 2 | 3} /><span>{joinPt(IMPORTANCE.filter((i) => f.importance.includes(i[0])).map((i, n) => (n ? i[1].toLowerCase() : i[1])))}</span></span>}
+          renderOption={(k, name) => <><Importance n={Number(k) as 1 | 2 | 3} /><span className="msel-name">{name}</span></>} />
+        <div className="cal-meta">
+          {state === 'ok' && <span className="num">{shown.length} {shown.length === 1 ? 'evento' : 'eventos'}</span>}
+          {!isDefault && <button type="button" className="link-btn" onClick={() => setF({ ...DEFAULTS, period: f.period })}>Restaurar filtros</button>}
         </div>
-      </Panel>
+      </div>
 
       <div style={{ marginTop: 12 }}>
         <Panel flush
